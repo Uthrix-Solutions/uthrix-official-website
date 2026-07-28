@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Menu, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Menu, MessageCircle, X } from 'lucide-react';
 import { AnimatePresence, motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from "../assets/logo5.png";
+
+// Single source of truth for WhatsApp contact number
+const WHATSAPP_NUMBER = '94786733516';
 
 const navLinks = [
   { name: 'Home', path: 'home', isRoute: false },
@@ -14,17 +17,23 @@ const navLinks = [
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
   const [activeSection, setActiveSection] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide navbar on careers page
-  if (location.pathname === '/careers') {
-    return null;
-  }
+  // Ref to store a pending scroll-to-section target after navigating to '/'
+  const pendingScrollRef = useRef<string | null>(null);
 
   const { scrollY } = useScroll();
+
+  // Derive isSticky from scrollY MotionValue — single subscription, no extra state
+  const isSticky = useRef(false);
+  useEffect(() => {
+    const unsubscribe = scrollY.on('change', (value) => {
+      isSticky.current = value > 12;
+    });
+    return () => unsubscribe();
+  }, [scrollY]);
 
   const smoothProgress = useSpring(
     useTransform(scrollY, [0, 180], [0, 1]),
@@ -40,53 +49,48 @@ export function Navigation() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  // Scroll to a section by element ID, accounting for the navbar height
+  const scrollToElement = (path: string) => {
+    const element = document.getElementById(path);
+    if (element) {
+      const navbarHeight = isSticky.current ? 72 : 96;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY - navbarHeight;
+      window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+    }
+  };
+
+  // When we navigate back to '/', execute any pending scroll target
   useEffect(() => {
-    const unsubscribe = scrollY.on('change', (value) => setIsSticky(value > 12));
-    return () => unsubscribe();
-  }, [scrollY]);
+    if (location.pathname === '/' && pendingScrollRef.current) {
+      const target = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      // Use requestAnimationFrame to ensure the page has rendered before scrolling
+      const raf = requestAnimationFrame(() => scrollToElement(target));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [location.pathname]);
 
   // Scroll to section handler
   const scrollToSection = (path: string, isRoute?: boolean) => {
     setActiveSection(path);
     setIsMenuOpen(false);
-    
+
     // Handle route navigation
     if (isRoute) {
       navigate(path);
       return;
     }
-    
-    // Handle scroll to section on homepage
+
+    // Handle scroll to section when not on the homepage
     if (location.pathname !== '/') {
+      pendingScrollRef.current = path;
       navigate('/');
-      // Wait for navigation then scroll
-      setTimeout(() => {
-        const element = document.getElementById(path);
-        if (element) {
-          const navbarHeight = isSticky ? 72 : 96;
-          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-          
-          window.scrollTo({
-            top: elementPosition,
-            behavior: 'smooth',
-          });
-        }
-      }, 100);
     } else {
-      const element = document.getElementById(path);
-      if (element) {
-        const navbarHeight = isSticky ? 72 : 96;
-        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-        
-        window.scrollTo({
-          top: elementPosition,
-          behavior: 'smooth',
-        });
-      }
+      scrollToElement(path);
     }
   };
 
-  // Track active section on scroll
+  // Track active section on scroll (scroll spy)
   useEffect(() => {
     const handleScrollSpy = () => {
       const sectionLinks = navLinks.filter(link => !link.isRoute);
@@ -97,7 +101,7 @@ export function Navigation() {
         if (section) {
           const sectionTop = section.offsetTop;
           const sectionHeight = section.offsetHeight;
-          
+
           if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
             setActiveSection(sectionLinks[index].path);
           }
@@ -108,6 +112,11 @@ export function Navigation() {
     window.addEventListener('scroll', handleScrollSpy);
     return () => window.removeEventListener('scroll', handleScrollSpy);
   }, []);
+
+  // Hide navbar on careers page — placed AFTER all hooks
+  if (location.pathname === '/careers') {
+    return null;
+  }
 
   return (
     <motion.header
@@ -123,15 +132,16 @@ export function Navigation() {
         top: topOffset,
       }}
       className={`fixed left-1/2 -translate-x-1/2 z-50 rounded-full border backdrop-blur-2xl transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-[0_18px_50px_-28px_rgba(0,0,0,0.55)] ${
-        isSticky
+        isSticky.current
           ? 'bg-white/20 dark:bg-black/60 border-white/10 dark:border-white/10'
           : 'bg-white/30 dark:bg-white/10 border-white/20 dark:border-white/10'
       }`}
     >
       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 via-transparent to-primary/20 opacity-60 blur-2xl pointer-events-none" />
       <nav className="relative flex items-center justify-between gap-4 w-full text-sm font-semibold text-gray-800 dark:text-gray-100">
-        <a
-          href="/"
+        {/* Logo — uses React Router Link to avoid a full page reload */}
+        <Link
+          to="/"
           className="flex items-center gap-3"
           onClick={() => setIsMenuOpen(false)}
         >
@@ -141,8 +151,8 @@ export function Navigation() {
             style={{ scale: logoScale }}
             className="w-9 h-9 cursor-pointer transition-transform duration-300 ease-out hover:scale-110 hover:-rotate-[2deg] hover:drop-shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
           />
-          
-        </a>
+        </Link>
+
         {/* Mobile menu button */}
         <button
           onClick={toggleMenu}
@@ -180,17 +190,17 @@ export function Navigation() {
               </a>
             </li>
           ))}
-          
+
           {/* Desktop Contact Button */}
           <li>
             <a
-              href="https://wa.me/94786733516"
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-primary to-primary-light text-white px-5 py-2 shadow-lg shadow-primary/30 transition-all duration-300 ease-out hover:shadow-primary/50 hover:-translate-y-0.5"
             >
               <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
-              <Send className="w-4 h-4" />
+              <MessageCircle className="w-4 h-4" />
               Talk to Us
             </a>
           </li>
@@ -224,16 +234,17 @@ export function Navigation() {
                   </a>
                 </li>
               ))}
-              
+
               {/* Mobile Contact Button */}
               <li className="mt-3">
                 <a
-                  href="https://wa.me/94762423423"
+                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsMenuOpen(false)}
-                  className="bg-primary text-white w-full h-10 flex items-center justify-center rounded-md font-medium hover:bg-primary/80 transition-colors"
+                  className="bg-primary text-white w-full h-10 flex items-center justify-center gap-2 rounded-md font-medium hover:bg-primary/80 transition-colors"
                 >
+                  <MessageCircle className="w-4 h-4" />
                   Contact Us
                 </a>
               </li>
