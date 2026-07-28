@@ -10,6 +10,7 @@ import { Footer } from '../components/Footer';
 import { FloatingThemeToggle } from '../components/FloatingThemeToggle';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { AnimatedBackground } from '../components/AnimatedBackground';
+import WhatsAppButton from '../components/WhatsAppButton';
 
 export function Home() {
   return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300 relative">
@@ -18,6 +19,7 @@ export function Home() {
         <Navigation />
         <FloatingThemeToggle />
         <ScrollToTopButton />
+        <WhatsAppButton />
         <main>
           <Hero />
           <Services />
