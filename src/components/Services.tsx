@@ -17,7 +17,8 @@ import {
   Layers, 
   Cloud, 
   Server,
-  ArrowRight
+  ArrowRight,
+  WorkflowIcon
 } from 'lucide-react';
 
 interface Service {
@@ -34,7 +35,62 @@ interface ServiceCategory {
 }
 
 const serviceCategories: ServiceCategory[] = [
+
   {
+    id: 'development',
+    name: 'Development Services',
+    services: [
+      {
+        icon: Globe,
+        title: 'Web Development',
+        description: 'Build stunning, high-performance websites and web applications with custom solutions, WordPress, e-commerce platforms, and more.',
+        link: '#web-dev'
+      },
+      {
+        icon: Smartphone,
+        title: 'Mobile App Development',
+        description: 'Create powerful native and cross-platform mobile applications that deliver exceptional user experiences on iOS and Android.',
+        link: '#mobile-dev'
+      },
+      {
+        icon: Code2,
+        title: 'Custom Software Solutions',
+        description: 'Solve complex business challenges with tailored software solutions designed specifically for your unique requirements.',
+        link: '#custom-software'
+      },
+      {
+        icon: WorkflowIcon,
+        title: 'Workflow Automations',
+        description: 'Solve complex business challenges with tailored workflow automation solutions designed specifically for your unique requirements.',
+        link: '#workflow-automation'
+      },
+      {
+        icon: Plug,
+        title: 'API Integration',
+        description: 'Seamlessly connect your systems and applications with robust API development and third-party integration services.',
+        link: '#api-integration'
+      },
+      {
+        icon: Layers,
+        title: 'UX/UI Design',
+        description: 'Craft intuitive, beautiful interfaces that delight users and drive engagement through research-driven design principles.',
+        link: '#ux-ui'
+      },
+      {
+        icon: Server,
+        title: 'SaaS Product Development',
+        description: 'Launch scalable software-as-a-service products with end-to-end development from concept to deployment and beyond.',
+        link: '#saas'
+      },
+      {
+        icon: Cloud,
+        title: 'Cloud Services & DevOps',
+        description: 'Optimize your infrastructure with cloud solutions, CI/CD pipelines, and DevOps practices for maximum efficiency and reliability.',
+        link: '#cloud-devops'
+      }
+    ]
+  },
+    {
     id: 'marketing',
     name: 'Marketing Services',
     services: [
@@ -82,54 +138,6 @@ const serviceCategories: ServiceCategory[] = [
       }
     ]
   },
-  {
-    id: 'software',
-    name: 'Software Development',
-    services: [
-      {
-        icon: Globe,
-        title: 'Web Development',
-        description: 'Build stunning, high-performance websites and web applications with custom solutions, WordPress, e-commerce platforms, and more.',
-        link: '#web-dev'
-      },
-      {
-        icon: Smartphone,
-        title: 'Mobile App Development',
-        description: 'Create powerful native and cross-platform mobile applications that deliver exceptional user experiences on iOS and Android.',
-        link: '#mobile-dev'
-      },
-      {
-        icon: Code2,
-        title: 'Custom Software Solutions',
-        description: 'Solve complex business challenges with tailored software solutions designed specifically for your unique requirements.',
-        link: '#custom-software'
-      },
-      {
-        icon: Plug,
-        title: 'API Integration',
-        description: 'Seamlessly connect your systems and applications with robust API development and third-party integration services.',
-        link: '#api-integration'
-      },
-      {
-        icon: Layers,
-        title: 'UX/UI Design',
-        description: 'Craft intuitive, beautiful interfaces that delight users and drive engagement through research-driven design principles.',
-        link: '#ux-ui'
-      },
-      {
-        icon: Server,
-        title: 'SaaS Product Development',
-        description: 'Launch scalable software-as-a-service products with end-to-end development from concept to deployment and beyond.',
-        link: '#saas'
-      },
-      {
-        icon: Cloud,
-        title: 'Cloud Services & DevOps',
-        description: 'Optimize your infrastructure with cloud solutions, CI/CD pipelines, and DevOps practices for maximum efficiency and reliability.',
-        link: '#cloud-devops'
-      }
-    ]
-  }
 ];
 
 const container = {
@@ -138,7 +146,7 @@ const container = {
     opacity: 1,
     transition: {
       staggerChildren: 0.08
-    }
+    } 
   }
 };
 
@@ -148,7 +156,7 @@ const item = {
 };
 
 export function Services() {
-  const [activeCategory, setActiveCategory] = useState<string>('marketing');
+  const [activeCategory, setActiveCategory] = useState<string>('development');
 
   const currentCategory = serviceCategories.find(cat => cat.id === activeCategory);
 
